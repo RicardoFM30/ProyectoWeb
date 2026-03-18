@@ -36,6 +36,12 @@ Proyecto academico con frontend en React (sin build) y backend en Express + SQLi
 - Encargado: puede gestionar productos.
 - Administrador: gestiona productos y usuarios.
 
+## Funcionalidades nuevas
+- Favoritos por usuario.
+- Historial de compras simuladas.
+- Filtros por genero, plataforma y precio.
+- Paginacion del catalogo.
+
 ## Notas
 - El panel usa un header simple `x-role` desde el frontend.
 - Las imagenes usan placeholders y se pueden reemplazar.

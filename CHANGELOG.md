@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.0] - 2026-03-18
+### Added
+- Initial demo with catalog, auth, cart, checkout, and admin CRUD.
+- Express API with SQLite storage.
+
 ## [0.2.0] - 2026-03-18
 ### Added
 - IGDB search endpoint to fetch game data and cover images.
@@ -40,7 +45,10 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - Admin panel layout upgraded with tabs and inventory view.
 
-## [0.1.0] - 2026-03-18
+## [0.5.0] - 2026-03-18
 ### Added
-- Initial demo with catalog, auth, cart, checkout, and admin CRUD.
-- Express API with SQLite storage.
+- Favorites per user.
+- Orders history with simulated checkout.
+- Catalog filters and pagination.
+
+

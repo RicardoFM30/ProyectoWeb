@@ -303,6 +303,15 @@ function initDb() {
     db.run(
       "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, email TEXT UNIQUE, password_hash TEXT, is_admin INTEGER DEFAULT 0, role TEXT DEFAULT 'user')"
     );
+    db.run(
+      "CREATE TABLE IF NOT EXISTS favorites (user_id INTEGER, game_id INTEGER, created_at TEXT DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (user_id, game_id))"
+    );
+    db.run(
+      "CREATE TABLE IF NOT EXISTS orders (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, total REAL, created_at TEXT DEFAULT CURRENT_TIMESTAMP)"
+    );
+    db.run(
+      "CREATE TABLE IF NOT EXISTS order_items (id INTEGER PRIMARY KEY AUTOINCREMENT, order_id INTEGER, game_id INTEGER, title TEXT, price REAL, qty INTEGER)"
+    );
     db.run("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'", () => {});
     db.run("UPDATE users SET role = 'admin' WHERE is_admin = 1 AND (role IS NULL OR role = '')");
     db.run("UPDATE users SET role = 'user' WHERE is_admin = 0 AND (role IS NULL OR role = '')");

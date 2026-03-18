@@ -128,6 +128,22 @@ button {
   color: var(--text);
 }
 
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.filters input,
+.filters select {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--panel-soft);
+  color: var(--text);
+}
+
 .btn {
   padding: 10px 18px;
   border-radius: 999px;
@@ -158,6 +174,7 @@ button {
   flex-direction: column;
   gap: 12px;
   min-height: 280px;
+  position: relative;
 }
 
 .card img {
@@ -171,11 +188,73 @@ button {
   font-weight: 600;
 }
 
+.fav-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  border: none;
+  background: rgba(10, 12, 18, 0.6);
+  color: var(--text);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 1rem;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border);
+}
+
+.fav-btn.active {
+  color: #031016;
+  background: var(--neon);
+}
+
 .panel {
   background: var(--panel);
   border-radius: var(--radius);
   border: 1px solid var(--border);
   padding: 22px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.order-list {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.order-card {
+  background: var(--panel-soft);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.order-items {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.order-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: var(--muted);
 }
 
 .admin-shell {

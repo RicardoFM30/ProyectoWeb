@@ -81,6 +81,21 @@ function requireRole(roles) {
 const requireAdmin = requireRole(["admin"]);
 const requireManager = requireRole(["admin", "manager"]);
 
+function getUserId(req) {
+  const raw = req.headers["x-user-id"];
+  const id = Number(raw);
+  return Number.isFinite(id) ? id : null;
+}
+
+function requireUser(req, res, next) {
+  const userId = getUserId(req);
+  if (!userId) {
+    return res.status(401).json({ message: "Usuario no autenticado" });
+  }
+  req.userId = userId;
+  return next();
+}
+
 app.get("/api/games", (req, res) => {
   const query = req.query.search ? `%${req.query.search}%` : "%";
   db.all(
@@ -314,6 +329,144 @@ app.put("/api/users/:id", requireAdmin, (req, res) => {
       return res.status(500).json({ message: "Error actualizando usuario" });
     }
     return res.json({ updated: this.changes });
+  });
+});
+
+app.get("/api/favorites", requireUser, (req, res) => {
+  db.all(
+    "SELECT game_id FROM favorites WHERE user_id = ?",
+    [req.userId],
+    (err, rows) => {
+      if (err) {
+        return res.status(500).json({ message: "Error consultando favoritos" });
+      }
+      return res.json(rows.map((row) => row.game_id));
+    }
+  );
+});
+
+app.post("/api/favorites", requireUser, (req, res) => {
+  const { gameId } = req.body;
+  const safeGameId = Number(gameId);
+  if (!Number.isFinite(safeGameId)) {
+    return res.status(400).json({ message: "Juego invalido" });
+  }
+  db.run(
+    "INSERT OR IGNORE INTO favorites (user_id, game_id) VALUES (?, ?)",
+    [req.userId, safeGameId],
+    function (err) {
+      if (err) {
+        return res.status(500).json({ message: "Error guardando favorito" });
+      }
+      return res.status(201).json({ ok: true });
+    }
+  );
+});
+
+app.delete("/api/favorites/:gameId", requireUser, (req, res) => {
+  const safeGameId = Number(req.params.gameId);
+  if (!Number.isFinite(safeGameId)) {
+    return res.status(400).json({ message: "Juego invalido" });
+  }
+  db.run(
+    "DELETE FROM favorites WHERE user_id = ? AND game_id = ?",
+    [req.userId, safeGameId],
+    function (err) {
+      if (err) {
+        return res.status(500).json({ message: "Error eliminando favorito" });
+      }
+      return res.json({ deleted: this.changes });
+    }
+  );
+});
+
+app.get("/api/orders", requireUser, (req, res) => {
+  db.all(
+    "SELECT id, total, created_at FROM orders WHERE user_id = ? ORDER BY created_at DESC",
+    [req.userId],
+    (err, orders) => {
+      if (err) {
+        return res.status(500).json({ message: "Error consultando pedidos" });
+      }
+      if (!orders.length) {
+        return res.json([]);
+      }
+      const ids = orders.map((order) => order.id);
+      const placeholders = ids.map(() => "?").join(",");
+      db.all(
+        `SELECT order_id, game_id, title, price, qty FROM order_items WHERE order_id IN (${placeholders})`,
+        ids,
+        (itemsErr, items) => {
+          if (itemsErr) {
+            return res.status(500).json({ message: "Error consultando items" });
+          }
+          const grouped = {};
+          items.forEach((item) => {
+            if (!grouped[item.order_id]) {
+              grouped[item.order_id] = [];
+            }
+            grouped[item.order_id].push(item);
+          });
+          const withItems = orders.map((order) => ({
+            ...order,
+            items: grouped[order.id] || []
+          }));
+          return res.json(withItems);
+        }
+      );
+    }
+  );
+});
+
+app.post("/api/orders", requireUser, (req, res) => {
+  const items = Array.isArray(req.body.items) ? req.body.items : [];
+  if (!items.length) {
+    return res.status(400).json({ message: "Carrito vacio" });
+  }
+  const normalized = items
+    .map((item) => ({
+      game_id: Number(item.id),
+      title: String(item.title || "").trim(),
+      price: Number(item.price),
+      qty: Number(item.qty)
+    }))
+    .filter((item) =>
+      Number.isFinite(item.game_id) &&
+      item.title &&
+      Number.isFinite(item.price) &&
+      Number.isFinite(item.qty) &&
+      item.qty > 0
+    );
+
+  if (!normalized.length) {
+    return res.status(400).json({ message: "Items invalidos" });
+  }
+
+  const total = normalized.reduce((sum, item) => sum + item.price * item.qty, 0);
+
+  db.serialize(() => {
+    db.run(
+      "INSERT INTO orders (user_id, total) VALUES (?, ?)",
+      [req.userId, Number(total.toFixed(2))],
+      function (orderErr) {
+        if (orderErr) {
+          return res.status(500).json({ message: "Error creando pedido" });
+        }
+        const orderId = this.lastID;
+        const stmt = db.prepare(
+          "INSERT INTO order_items (order_id, game_id, title, price, qty) VALUES (?, ?, ?, ?, ?)"
+        );
+        normalized.forEach((item) => {
+          stmt.run([orderId, item.game_id, item.title, item.price, item.qty]);
+        });
+        stmt.finalize((finalErr) => {
+          if (finalErr) {
+            return res.status(500).json({ message: "Error guardando items" });
+          }
+          return res.status(201).json({ id: orderId });
+        });
+      }
+    );
   });
 });
 

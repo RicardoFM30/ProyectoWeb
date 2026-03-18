@@ -50,6 +50,14 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [users, setUsers] = useState([]);
+  const [favorites, setFavorites] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [genreFilter, setGenreFilter] = useState("all");
+  const [platformFilter, setPlatformFilter] = useState("all");
+  const [priceMin, setPriceMin] = useState("");
+  const [priceMax, setPriceMax] = useState("");
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 8;
 
   useEffect(() => {
     fetchGames();
@@ -65,6 +73,7 @@ function App() {
         "/cart": "cart",
         "/checkout": "checkout",
         "/admin": "admin",
+        "/orders": "orders",
         "/detail": "detail"
       };
       const nextView = routeMap[path] || "catalog";
@@ -92,6 +101,16 @@ function App() {
     }
   }, [user]);
 
+  useEffect(() => {
+    if (user && user.id) {
+      fetchFavorites();
+      fetchOrders();
+    } else {
+      setFavorites([]);
+      setOrders([]);
+    }
+  }, [user]);
+
   const fetchGames = async (query = "") => {
     setLoading(true);
     setError("");
@@ -108,6 +127,7 @@ function App() {
   const handleSearch = (event) => {
     event.preventDefault();
     fetchGames(search);
+    setPage(1);
   };
 
   const handleSelect = (game) => {
@@ -183,6 +203,7 @@ function App() {
       cart: "/cart",
       checkout: "/checkout",
       admin: "/admin",
+      orders: "/orders",
       detail: "/detail"
     };
     setView(nextView);
@@ -238,13 +259,121 @@ function App() {
     await fetchUsers();
   };
 
+  const fetchFavorites = async () => {
+    if (!user || !user.id) {
+      return;
+    }
+    const data = await api("/api/favorites", {
+      headers: {
+        "x-user-id": user.id
+      }
+    });
+    setFavorites(data);
+  };
+
+  const toggleFavorite = async (gameId) => {
+    if (!user || !user.id) {
+      navigateTo("login");
+      return;
+    }
+    const exists = favorites.includes(gameId);
+    if (exists) {
+      await api(`/api/favorites/${gameId}`, {
+        method: "DELETE",
+        headers: {
+          "x-user-id": user.id
+        }
+      });
+      setFavorites((prev) => prev.filter((id) => id !== gameId));
+    } else {
+      await api("/api/favorites", {
+        method: "POST",
+        headers: {
+          "x-user-id": user.id
+        },
+        body: JSON.stringify({ gameId })
+      });
+      setFavorites((prev) => [...prev, gameId]);
+    }
+  };
+
+  const fetchOrders = async () => {
+    if (!user || !user.id) {
+      return;
+    }
+    const data = await api("/api/orders", {
+      headers: {
+        "x-user-id": user.id
+      }
+    });
+    setOrders(data);
+  };
+
+  const handleCreateOrder = async () => {
+    if (!user || !user.id) {
+      navigateTo("login");
+      return;
+    }
+    await api("/api/orders", {
+      method: "POST",
+      headers: {
+        "x-user-id": user.id
+      },
+      body: JSON.stringify({ items: cart })
+    });
+    setCart([]);
+    await fetchOrders();
+    navigateTo("orders");
+  };
+
   const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
   const visibleGames = games.filter(
     (game) => game && game.title && Number.isFinite(Number(game.price))
   );
+  const genres = Array.from(
+    new Set(visibleGames.map((game) => game.genre).filter(Boolean))
+  ).sort();
+  const platforms = Array.from(
+    new Set(visibleGames.map((game) => game.platform).filter(Boolean))
+  ).sort();
+  const filteredGames = useMemo(() => {
+    const minValue = priceMin ? Number(String(priceMin).replace(",", ".")) : null;
+    const maxValue = priceMax ? Number(String(priceMax).replace(",", ".")) : null;
+    return visibleGames.filter((game) => {
+      if (genreFilter !== "all" && game.genre !== genreFilter) {
+        return false;
+      }
+      if (platformFilter !== "all" && game.platform !== platformFilter) {
+        return false;
+      }
+      const priceValue = Number(game.price);
+      if (Number.isFinite(minValue) && priceValue < minValue) {
+        return false;
+      }
+      if (Number.isFinite(maxValue) && priceValue > maxValue) {
+        return false;
+      }
+      return true;
+    });
+  }, [visibleGames, genreFilter, platformFilter, priceMin, priceMax]);
+  const totalPages = Math.max(1, Math.ceil(filteredGames.length / itemsPerPage));
+  const pagedGames = filteredGames.slice(
+    (page - 1) * itemsPerPage,
+    page * itemsPerPage
+  );
   const role = getRole(user);
   const canManageGames = role === "admin" || role === "manager";
   const canManageUsers = role === "admin";
+
+  useEffect(() => {
+    setPage(1);
+  }, [genreFilter, platformFilter, priceMin, priceMax]);
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
 
   return (
     <div className="app">
@@ -266,6 +395,14 @@ function App() {
           >
             Carrito ({cartCount})
           </button>
+          {user ? (
+            <button
+              className={view === "orders" ? "active" : ""}
+              onClick={() => navigateTo("orders")}
+            >
+              Mis compras
+            </button>
+          ) : null}
           {user && canManageGames ? (
             <button
               className={view === "admin" ? "active" : ""}
@@ -307,13 +444,59 @@ function App() {
                   Buscar
                 </button>
               </form>
+              <div className="filters">
+                <select
+                  value={genreFilter}
+                  onChange={(event) => setGenreFilter(event.target.value)}
+                >
+                  <option value="all">Todos los generos</option>
+                  {genres.map((genre) => (
+                    <option key={genre} value={genre}>
+                      {genre}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={platformFilter}
+                  onChange={(event) => setPlatformFilter(event.target.value)}
+                >
+                  <option value="all">Todas las plataformas</option>
+                  {platforms.map((platform) => (
+                    <option key={platform} value={platform}>
+                      {platform}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  placeholder="Precio min"
+                  value={priceMin}
+                  onChange={(event) => setPriceMin(event.target.value)}
+                />
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  placeholder="Precio max"
+                  value={priceMax}
+                  onChange={(event) => setPriceMax(event.target.value)}
+                />
+              </div>
             </section>
             {loading && <p>Cargando juegos...</p>}
             {error && <p>{error}</p>}
             <section className="grid">
-              {visibleGames.map((game) => (
+              {pagedGames.map((game) => (
                 <article className="card" key={game.id}>
                   <img src={game.image_url} alt={game.title} />
+                  <button
+                    className={`fav-btn ${favorites.includes(game.id) ? "active" : ""}`}
+                    type="button"
+                    onClick={() => toggleFavorite(game.id)}
+                    aria-label="Favorito"
+                  >
+                    ★
+                  </button>
                   <h3>{game.title}</h3>
                   <p className="price">${Number(game.price).toFixed(2)}</p>
                   <span className="badge">{game.genre}</span>
@@ -328,6 +511,27 @@ function App() {
                 </article>
               ))}
             </section>
+            <div className="pagination">
+              <button
+                className="btn btn-ghost"
+                type="button"
+                disabled={page === 1}
+                onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+              >
+                Anterior
+              </button>
+              <span>
+                Pagina {page} de {totalPages}
+              </span>
+              <button
+                className="btn btn-ghost"
+                type="button"
+                disabled={page === totalPages}
+                onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+              >
+                Siguiente
+              </button>
+            </div>
           </>
         )}
 
@@ -343,7 +547,15 @@ function App() {
               <button className="btn" onClick={() => addToCart(selectedGame)}>
                 Agregar al carrito
               </button>
-              <button className="btn btn-ghost" onClick={() => setView("catalog")}
+              <button
+                className={`btn btn-ghost ${
+                  favorites.includes(selectedGame.id) ? "active" : ""
+                }`}
+                onClick={() => toggleFavorite(selectedGame.id)}
+              >
+                {favorites.includes(selectedGame.id) ? "Favorito" : "Guardar"}
+              </button>
+              <button className="btn btn-ghost" onClick={() => navigateTo("catalog")}
               >
                 Volver
               </button>
@@ -399,11 +611,40 @@ function App() {
               <input type="text" placeholder="Nombre completo" required />
               <input type="email" placeholder="Email" required />
               <input type="text" placeholder="Direccion" required />
-              <button className="btn" type="button" onClick={() => navigateTo("catalog")}
+              <button className="btn" type="button" onClick={handleCreateOrder}
               >
                 Confirmar (simulado)
               </button>
             </form>
+          </section>
+        )}
+
+        {view === "orders" && (
+          <section className="panel">
+            <h2>Historial de compras</h2>
+            {!orders.length ? (
+              <p>No tienes compras registradas.</p>
+            ) : (
+              <div className="order-list">
+                {orders.map((order) => (
+                  <div className="order-card" key={order.id}>
+                    <div className="order-header">
+                      <strong>Pedido #{order.id}</strong>
+                      <span>${Number(order.total).toFixed(2)}</span>
+                    </div>
+                    <p className="muted">{new Date(order.created_at).toLocaleString()}</p>
+                    <div className="order-items">
+                      {order.items.map((item) => (
+                        <div className="order-item" key={`${order.id}-${item.game_id}`}>
+                          <span>{item.title}</span>
+                          <span>x{item.qty}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </section>
         )}
 
