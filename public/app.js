@@ -1,7 +1,6 @@
 const { useEffect, useMemo, useState } = React;
 
-const rawApiBaseUrl = (window.__API_BASE_URL__ || "").trim();
-const API_BASE_URL = rawApiBaseUrl.includes("TU-API-RENDER") ? "" : rawApiBaseUrl.replace(/\/$/, "");
+const API_BASE_URL = "";
 
 const buildApiUrl = (path) => {
   if (/^https?:\/\//.test(path)) {

@@ -1,5 +1,4 @@
 const crypto = require("crypto");
-const cors = require("cors");
 const express = require("express");
 const fetch = require("node-fetch");
 const path = require("path");
@@ -9,8 +8,6 @@ require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const IS_FIREBASE_FUNCTION = Boolean(process.env.K_SERVICE || process.env.FUNCTION_TARGET);
-const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || "";
 const IGDB_CLIENT_ID = process.env.IGDB_CLIENT_ID;
 const IGDB_CLIENT_SECRET = process.env.IGDB_CLIENT_SECRET;
 const HF_API_TOKEN = process.env.HF_API_TOKEN;
@@ -21,20 +18,6 @@ initDb();
 seedDb();
 
 app.use(express.json());
-const allowedOrigins = FRONTEND_ORIGIN
-  .split(",")
-  .map((origin) => origin.trim())
-  .filter(Boolean);
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-      return callback(new Error("Origin no permitido"));
-    }
-  })
-);
 app.use(express.static(path.join(__dirname, "..", "public")));
 
 function hashPassword(password) {
@@ -599,10 +582,8 @@ app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "..", "public", "index.html"));
 });
 
-if (!IS_FIREBASE_FUNCTION) {
-  app.listen(PORT, () => {
-    console.log(`Servidor activo en http://localhost:${PORT}`);
-  });
-}
+app.listen(PORT, () => {
+  console.log(`Servidor activo en http://localhost:${PORT}`);
+});
 
 module.exports = { app };

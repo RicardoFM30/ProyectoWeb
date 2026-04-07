@@ -2,6 +2,8 @@
 
 Proyecto academico fullstack con frontend React (sin build) y backend Express + SQLite.
 
+Estado actual: ejecucion local unicamente (sin despliegue cloud activo).
+
 ## Requisitos
 - Node.js 18+
 - npm
@@ -41,12 +43,18 @@ HF_API_TOKEN es obligatorio para usar la inferencia del IA Lab.
 - Historial de compras
 - Filtros y paginacion
 - Integracion con IGDB
-- IA Lab con inferencia de Hugging Face (facebook/bart-large-mnli)
+- Tu proximo juego (clasificacion de texto con Hugging Face, modelo facebook/bart-large-mnli)
+- Fallback de catalogo en modo estatico cuando falla la API de juegos
+- Rail lateral de anuncios con creatividades SVG originales
+
+## Cambios recientes documentados
+- Historial tecnico completo en CHANGELOG.md
+- Incluye lo agregado y luego retirado (intentos cloud y rollback a local)
+- Incluye bitacora paso a paso de la sesion de trabajo (2026-04-07 a 2026-04-08)
 
 ## Evidencias academicas
 - Documentacion de prompts: docs/prompts-ia.md
 - Reflexion y aprendizaje: docs/reflexion-academica.md
-- Guia de despliegue cloud: docs/despliegue-nube.md
 
 ## Requisito de contenido IA
 La vista IA Lab integra una imagen IA y un bloque de video para reemplazo por video IA final.
