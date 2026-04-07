@@ -1,11 +1,21 @@
 const { useEffect, useMemo, useState } = React;
 
+const rawApiBaseUrl = (window.__API_BASE_URL__ || "").trim();
+const API_BASE_URL = rawApiBaseUrl.includes("TU-API-RENDER") ? "" : rawApiBaseUrl.replace(/\/$/, "");
+
+const buildApiUrl = (path) => {
+  if (/^https?:\/\//.test(path)) {
+    return path;
+  }
+  return `${API_BASE_URL}${path}`;
+};
+
 const api = async (path, options = {}) => {
   const mergedHeaders = {
     "Content-Type": "application/json",
     ...(options.headers || {})
   };
-  const response = await fetch(path, {
+  const response = await fetch(buildApiUrl(path), {
     ...options,
     headers: mergedHeaders
   });
@@ -16,6 +26,24 @@ const api = async (path, options = {}) => {
   }
 
   return response.json();
+};
+
+const loadFallbackGames = async (query = "") => {
+  const response = await fetch("/fallback-games.json");
+  if (!response.ok) {
+    throw new Error("No se pudo cargar el catalogo");
+  }
+  const games = await response.json();
+  const term = query.trim().toLowerCase();
+  if (!term) {
+    return games;
+  }
+  return games.filter((game) => {
+    const title = (game.title || "").toLowerCase();
+    const genre = (game.genre || "").toLowerCase();
+    const platform = (game.platform || "").toLowerCase();
+    return title.includes(term) || genre.includes(term) || platform.includes(term);
+  });
 };
 
 const getStored = (key, fallback) => {
@@ -57,6 +85,11 @@ function App() {
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
   const [page, setPage] = useState(1);
+  const [aiText, setAiText] = useState("");
+  const [aiLabels, setAiLabels] = useState("accion,aventura,rpg,mundo abierto,supervivencia,terror,estrategia,simulacion,cooperativo,multijugador,pvp,pve,rompecabezas,plataformas,roguelike,metroidvania,narrativo,stealth,ciencia ficcion,fantasia,arcade,casual");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState("");
+  const [aiResult, setAiResult] = useState([]);
   const itemsPerPage = 8;
 
   useEffect(() => {
@@ -74,7 +107,8 @@ function App() {
         "/checkout": "checkout",
         "/admin": "admin",
         "/orders": "orders",
-        "/detail": "detail"
+        "/detail": "detail",
+        "/ai-lab": "ai-lab"
       };
       const nextView = routeMap[path] || "catalog";
       if (nextView === "detail" && !selectedGame) {
@@ -118,7 +152,12 @@ function App() {
       const data = await api(`/api/games?search=${encodeURIComponent(query)}`);
       setGames(data);
     } catch (err) {
-      setError(err.message);
+      try {
+        const fallbackGames = await loadFallbackGames(query);
+        setGames(fallbackGames);
+      } catch (fallbackError) {
+        setError(fallbackError.message || err.message || "Error inesperado");
+      }
     } finally {
       setLoading(false);
     }
@@ -204,7 +243,8 @@ function App() {
       checkout: "/checkout",
       admin: "/admin",
       orders: "/orders",
-      detail: "/detail"
+      detail: "/detail",
+      "ai-lab": "/ai-lab"
     };
     setView(nextView);
     window.history.pushState({}, "", pathMap[nextView] || "/");
@@ -326,6 +366,31 @@ function App() {
     navigateTo("orders");
   };
 
+  const handleAiClassify = async (event) => {
+    event.preventDefault();
+    setAiLoading(true);
+    setAiError("");
+    setAiResult([]);
+    try {
+      const labels = aiLabels
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
+      const data = await api("/api/ai/classify", {
+        method: "POST",
+        body: JSON.stringify({
+          text: aiText,
+          labels
+        })
+      });
+      setAiResult(Array.isArray(data.labels) ? data.labels : []);
+    } catch (err) {
+      setAiError(err.message);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
   const visibleGames = games.filter(
     (game) => game && game.title && Number.isFinite(Number(game.price))
@@ -364,6 +429,36 @@ function App() {
   const role = getRole(user);
   const canManageGames = role === "admin" || role === "manager";
   const canManageUsers = role === "admin";
+  const aiAds = [
+    {
+      title: "NovaBox X",
+      subtitle: "Nueva consola con trazado de rayos y carga ultrarrapida",
+      image: "/media/ad-console-novabox.svg",
+      badge: "Lanzamiento",
+      price: "Desde $499"
+    },
+    {
+      title: "TripVago Deals",
+      subtitle: "Compara hoteles y cierra tu escapada gamer al mejor precio",
+      image: "/media/ad-tripvago-deals.svg",
+      badge: "Viajes",
+      price: "Ahorra hasta 35%"
+    },
+    {
+      title: "Echoes of Mars",
+      subtitle: "Oferta flash del fin de semana en clave digital",
+      image: "/media/ad-echoes-offer.svg",
+      badge: "-60%",
+      price: "$9.99"
+    },
+    {
+      title: "Pulse Strike Arena Pass",
+      subtitle: "Bundle competitivo con skins legendarias",
+      image: "/media/ad-pulse-bundle.svg",
+      badge: "Bundle",
+      price: "$14.99"
+    }
+  ];
 
   useEffect(() => {
     setPage(1);
@@ -411,6 +506,12 @@ function App() {
               Panel
             </button>
           ) : null}
+          <button
+            className={view === "ai-lab" ? "active" : ""}
+            onClick={() => navigateTo("ai-lab")}
+          >
+            Tu proximo juego
+          </button>
           {user ? (
             <button onClick={handleLogout}>Salir</button>
           ) : (
@@ -485,53 +586,72 @@ function App() {
             </section>
             {loading && <p>Cargando juegos...</p>}
             {error && <p>{error}</p>}
-            <section className="grid">
-              {pagedGames.map((game) => (
-                <article className="card" key={game.id}>
-                  <img src={game.image_url} alt={game.title} />
+            <section className="catalog-layout">
+              <div>
+                <section className="grid">
+                  {pagedGames.map((game) => (
+                    <article className="card" key={game.id}>
+                      <img src={game.image_url} alt={game.title} />
+                      <button
+                        className={`fav-btn ${favorites.includes(game.id) ? "active" : ""}`}
+                        type="button"
+                        onClick={() => toggleFavorite(game.id)}
+                        aria-label="Favorito"
+                      >
+                        ★
+                      </button>
+                      <h3>{game.title}</h3>
+                      <p className="price">${Number(game.price).toFixed(2)}</p>
+                      <span className="badge">{game.genre}</span>
+                      <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
+                        <button className="btn" onClick={() => handleSelect(game)}>
+                          Ver detalle
+                        </button>
+                        <button className="btn btn-ghost" onClick={() => addToCart(game)}>
+                          Agregar
+                        </button>
+                      </div>
+                    </article>
+                  ))}
+                </section>
+                <div className="pagination">
                   <button
-                    className={`fav-btn ${favorites.includes(game.id) ? "active" : ""}`}
+                    className="btn btn-ghost"
                     type="button"
-                    onClick={() => toggleFavorite(game.id)}
-                    aria-label="Favorito"
+                    disabled={page === 1}
+                    onClick={() => setPage((prev) => Math.max(1, prev - 1))}
                   >
-                    ★
+                    Anterior
                   </button>
-                  <h3>{game.title}</h3>
-                  <p className="price">${Number(game.price).toFixed(2)}</p>
-                  <span className="badge">{game.genre}</span>
-                  <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
-                    <button className="btn" onClick={() => handleSelect(game)}>
-                      Ver detalle
-                    </button>
-                    <button className="btn btn-ghost" onClick={() => addToCart(game)}>
-                      Agregar
-                    </button>
-                  </div>
-                </article>
-              ))}
+                  <span>
+                    Pagina {page} de {totalPages}
+                  </span>
+                  <button
+                    className="btn btn-ghost"
+                    type="button"
+                    disabled={page === totalPages}
+                    onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+                  >
+                    Siguiente
+                  </button>
+                </div>
+              </div>
+
+              <aside className="ads-rail">
+                <h3>Anuncios IA</h3>
+                {aiAds.map((ad) => (
+                  <article className="ad-card" key={ad.title}>
+                    <img src={ad.image} alt={ad.title} loading="lazy" />
+                    <div>
+                      <span className="ad-badge">{ad.badge}</span>
+                      <strong>{ad.title}</strong>
+                      <p className="muted">{ad.subtitle}</p>
+                      <p className="ad-price">{ad.price}</p>
+                    </div>
+                  </article>
+                ))}
+              </aside>
             </section>
-            <div className="pagination">
-              <button
-                className="btn btn-ghost"
-                type="button"
-                disabled={page === 1}
-                onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-              >
-                Anterior
-              </button>
-              <span>
-                Pagina {page} de {totalPages}
-              </span>
-              <button
-                className="btn btn-ghost"
-                type="button"
-                disabled={page === totalPages}
-                onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
-              >
-                Siguiente
-              </button>
-            </div>
           </>
         )}
 
@@ -679,10 +799,77 @@ function App() {
             canManageGames={canManageGames}
           />
         )}
+
+        {view === "ai-lab" && (
+          <section className="panel ai-lab">
+            <h2>Tu proximo juego</h2>
+            <p className="muted">
+              Describe tu idea y la IA estima el perfil de genero para ayudarte a definir tu proximo proyecto.
+            </p>
+
+            <form className="form" onSubmit={handleAiClassify}>
+              <textarea
+                rows="4"
+                placeholder="Escribe una idea breve de videojuego para clasificarla por etiquetas"
+                value={aiText}
+                onChange={(event) => setAiText(event.target.value)}
+                required
+              />
+              <input
+                type="text"
+                placeholder="Etiquetas separadas por coma"
+                value={aiLabels}
+                onChange={(event) => setAiLabels(event.target.value)}
+              />
+              <button className="btn" type="submit" disabled={aiLoading}>
+                {aiLoading ? "Analizando..." : "Ejecutar inferencia"}
+              </button>
+            </form>
+
+            {aiError && <p>{aiError}</p>}
+
+            {aiResult.length > 0 && (
+              <div className="ai-results">
+                {aiResult.map((item) => (
+                  <div className="ai-score" key={item.label}>
+                    <strong>{item.label}</strong>
+                    <span>{Math.round(item.score * 100)}%</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="ai-media-grid">
+              <article className="ai-media-card">
+                <h3>Escena: Neon District</h3>
+                <img
+                  src="/media/neon-district.svg"
+                  alt="Escena neon creada para la pagina"
+                  loading="lazy"
+                />
+                <p className="muted">Ilustracion original para ambientar ideas de accion urbana.</p>
+              </article>
+
+              <article className="ai-media-card">
+                <h3>Escena: Outbreak Shelter</h3>
+                <img src="/media/outbreak-shelter.svg" alt="Escena de supervivencia con refugio" loading="lazy" />
+                <p className="muted">
+                  Ilustracion original pensada para conceptos survival-horror y tension narrativa.
+                </p>
+              </article>
+
+              <article className="ai-media-card">
+                <h3>Escena: Puzzle Core</h3>
+                <img src="/media/puzzle-core.svg" alt="Escena de laboratorio con puzles" loading="lazy" />
+                <p className="muted">Ilustracion original enfocada en rompecabezas y estrategia.</p>
+              </article>
+            </div>
+          </section>
+        )}
       </main>
 
       <footer className="footer">
-        Demo academica. Pagos y licencias no reales.
+        <p>Demo academica. Pagos y licencias no reales.</p>
       </footer>
     </div>
   );

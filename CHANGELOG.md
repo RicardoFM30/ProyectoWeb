@@ -45,6 +45,13 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - Admin panel layout upgraded with tabs and inventory view.
 
+## [0.6.0] - 2026-04-07
+### Added
+- Hugging Face inference endpoint `/api/ai/classify` using `facebook/bart-large-mnli`.
+- New `IA Lab` section in frontend to test text classification.
+- Academic documentation under `docs/` (prompts, reflection, cloud deployment).
+- AI media block integrated in IA Lab (image + replaceable video slot).
+
 ## [0.5.0] - 2026-03-18
 ### Added
 - Favorites per user.

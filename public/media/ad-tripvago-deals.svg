@@ -1,0 +1,35 @@
+<svg width="1280" height="800" viewBox="0 0 1280 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1280" y2="800" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F1D2C"/>
+      <stop offset="1" stop-color="#203847"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="800" fill="url(#bg)"/>
+  <rect x="70" y="72" width="1140" height="656" rx="26" fill="#F4FAFF"/>
+
+  <text x="126" y="178" fill="#1A2B3F" font-size="68" font-family="Arial" font-weight="700">TripVago Deals</text>
+  <text x="126" y="224" fill="#4A627A" font-size="28" font-family="Arial">Compara hoteles y reserva al mejor precio</text>
+
+  <rect x="126" y="266" width="1028" height="92" rx="46" fill="#EAF3FB" stroke="#C8DDEC"/>
+  <text x="166" y="323" fill="#6A829A" font-size="34" font-family="Arial">Madrid • 2 noches • 2 adultos</text>
+
+  <rect x="126" y="396" width="320" height="262" rx="18" fill="#EAF3FB" stroke="#D4E6F3"/>
+  <rect x="476" y="396" width="320" height="262" rx="18" fill="#EAF3FB" stroke="#D4E6F3"/>
+  <rect x="826" y="396" width="328" height="262" rx="18" fill="#EAF3FB" stroke="#D4E6F3"/>
+
+  <text x="154" y="448" fill="#1C3045" font-size="30" font-family="Arial" font-weight="700">Hotel Pixel Inn</text>
+  <text x="154" y="494" fill="#4A627A" font-size="24" font-family="Arial">9.0 Excelente</text>
+  <text x="154" y="564" fill="#00A86B" font-size="46" font-family="Arial" font-weight="700">$89</text>
+
+  <text x="506" y="448" fill="#1C3045" font-size="30" font-family="Arial" font-weight="700">Arcade Suites</text>
+  <text x="506" y="494" fill="#4A627A" font-size="24" font-family="Arial">8.7 Muy bueno</text>
+  <text x="506" y="564" fill="#00A86B" font-size="46" font-family="Arial" font-weight="700">$99</text>
+
+  <text x="854" y="448" fill="#1C3045" font-size="30" font-family="Arial" font-weight="700">Metro Capsule</text>
+  <text x="854" y="494" fill="#4A627A" font-size="24" font-family="Arial">8.4 Recomendado</text>
+  <text x="854" y="564" fill="#00A86B" font-size="46" font-family="Arial" font-weight="700">$79</text>
+
+  <rect x="870" y="584" width="254" height="58" rx="29" fill="#1EBC73"/>
+  <text x="925" y="622" fill="#F3FFFA" font-size="28" font-family="Arial" font-weight="700">Ver ofertas</text>
+</svg>

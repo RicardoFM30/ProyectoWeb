@@ -6,7 +6,9 @@ const sqlite3 = require("sqlite3").verbose();
 
 require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
 
-const dataDir = path.join(__dirname, "..", "data");
+const dataDir = process.env.DATA_DIR
+  ? path.resolve(process.env.DATA_DIR)
+  : path.join(__dirname, "..", "data");
 const dbPath = path.join(dataDir, "store.db");
 
 if (!fs.existsSync(dataDir)) {

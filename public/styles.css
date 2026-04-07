@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Chakra+Petch:wght@500;600;700&display=swap");
+
 :root {
   --bg: #0a0c12;
   --panel: #11131a;
@@ -18,12 +20,15 @@
 }
 
 body {
-  font-family: "Orbitron", "Impact", "Arial Black", sans-serif;
+  font-family: "Sora", "Segoe UI", sans-serif;
   background: radial-gradient(circle at top, rgba(0, 240, 255, 0.08), transparent 45%),
     radial-gradient(circle at 70% 20%, rgba(255, 75, 216, 0.12), transparent 50%),
     var(--bg);
   color: var(--text);
   min-height: 100vh;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 a {
@@ -58,8 +63,10 @@ button {
   display: flex;
   align-items: center;
   gap: 12px;
+  font-family: "Chakra Petch", "Sora", sans-serif;
+  font-size: 1.2rem;
   font-weight: 700;
-  letter-spacing: 1px;
+  letter-spacing: 0.08em;
 }
 
 .brand__dot {
@@ -104,8 +111,10 @@ button {
 }
 
 .hero h1 {
+  font-family: "Chakra Petch", "Sora", sans-serif;
   font-size: clamp(2rem, 4vw, 3.2rem);
   margin-bottom: 12px;
+  line-height: 1.05;
 }
 
 .hero p {
@@ -163,6 +172,61 @@ button {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
   gap: 20px;
+}
+
+.catalog-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 20px;
+  align-items: start;
+}
+
+.ads-rail {
+  position: sticky;
+  top: 105px;
+  display: grid;
+  gap: 12px;
+}
+
+.ads-rail h3 {
+  font-family: "Chakra Petch", "Sora", sans-serif;
+  font-size: 1.1rem;
+  color: var(--neon);
+}
+
+.ad-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 10px;
+  display: grid;
+  gap: 10px;
+}
+
+.ad-badge {
+  display: inline-block;
+  margin-bottom: 6px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(255, 75, 216, 0.18);
+  border: 1px solid rgba(255, 75, 216, 0.5);
+  color: #ffc9f2;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+}
+
+.ad-price {
+  margin-top: 6px;
+  color: var(--neon);
+  font-weight: 700;
+}
+
+.ad-card img {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .card {
@@ -326,6 +390,7 @@ button {
 }
 
 .panel h2 {
+  font-family: "Chakra Petch", "Sora", sans-serif;
   margin-bottom: 14px;
 }
 
@@ -370,7 +435,64 @@ button {
   color: var(--muted);
 }
 
+.muted {
+  color: var(--muted);
+}
+
+.ai-lab {
+  display: grid;
+  gap: 16px;
+}
+
+.ai-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.ai-score {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--panel-soft);
+  border: 1px solid var(--border);
+}
+
+.ai-media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.ai-media-card {
+  background: var(--panel-soft);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.ai-media-card img,
+.ai-media-card video {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
 @media (max-width: 720px) {
+  .catalog-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .ads-rail {
+    position: static;
+  }
+
   .topbar {
     flex-direction: column;
     gap: 16px;

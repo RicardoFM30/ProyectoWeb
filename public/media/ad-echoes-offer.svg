@@ -1,0 +1,26 @@
+<svg width="1280" height="800" viewBox="0 0 1280 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1280" y2="800" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#160D24"/>
+      <stop offset="1" stop-color="#2C183B"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="800" fill="url(#bg)"/>
+  <circle cx="980" cy="180" r="180" fill="#FF7A00" fill-opacity="0.3"/>
+
+  <text x="108" y="174" fill="#FFDCC5" font-size="64" font-family="Arial" font-weight="700">Echoes of Mars</text>
+  <text x="108" y="222" fill="#F3BFA2" font-size="30" font-family="Arial">Oferta Flash · Solo este fin de semana</text>
+
+  <rect x="104" y="282" width="640" height="390" rx="24" fill="#2B1A36" stroke="#FFB48A" stroke-opacity="0.3"/>
+  <path d="M160 590C210 500 300 440 390 400C500 352 600 350 688 364V634H160V590Z" fill="#5A2C2C"/>
+  <circle cx="596" cy="414" r="66" fill="#FF8C3A"/>
+
+  <rect x="792" y="302" width="380" height="370" rx="24" fill="#23142D" stroke="#FFB48A" stroke-opacity="0.3"/>
+  <text x="838" y="396" fill="#FFB48A" font-size="36" font-family="Arial" font-weight="700">ANTES $24.99</text>
+  <text x="838" y="486" fill="#3FFFC1" font-size="88" font-family="Arial" font-weight="700">$9.99</text>
+  <rect x="838" y="536" width="286" height="72" rx="36" fill="#3FFFC1"/>
+  <text x="908" y="582" fill="#132B23" font-size="34" font-family="Arial" font-weight="700">COMPRAR</text>
+
+  <circle cx="718" cy="240" r="70" fill="#FF4BD8"/>
+  <text x="676" y="257" fill="#20042A" font-size="42" font-family="Arial" font-weight="700">-60%</text>
+</svg>

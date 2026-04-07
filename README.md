@@ -1,53 +1,59 @@
-# Tienda web de videojuegos (demo)
+# Tienda web de videojuegos (demo academica)
 
-Proyecto academico con frontend en React (sin build) y backend en Express + SQLite.
+Proyecto academico fullstack con frontend React (sin build) y backend Express + SQLite.
 
 ## Requisitos
-- Node.js 12+
+- Node.js 18+
 - npm
 
-## Como ejecutar
+## Variables de entorno
+Crear archivo .env en la raiz:
+
+- IGDB_CLIENT_ID=tu_client_id
+- IGDB_CLIENT_SECRET=tu_client_secret
+- HF_API_TOKEN=tu_token_huggingface
+
+HF_API_TOKEN es obligatorio para usar la inferencia del IA Lab.
+
+## Ejecucion local
 1. Instalar dependencias:
-   - `npm install`
-2. Iniciar el servidor:
-   - `npm start`
-3. Abrir en el navegador en localhost:3000
+   - npm install
+2. Iniciar servidor:
+   - npm start
+3. Abrir en navegador:
+   - http://localhost:3000
 
-## Configurar IGDB
-1. Crea un archivo `.env` en la raiz con:
-   - `IGDB_CLIENT_ID=tu_client_id`
-   - `IGDB_CLIENT_SECRET=tu_client_secret`
-2. Reinicia el servidor para usar la busqueda desde el panel admin.
-
-## Ver la base de datos en DBeaver
-1. Crea una nueva conexion SQLite.
-2. Selecciona el archivo `data/store.db` como base de datos.
-3. Navega las tablas `games` y `users`.
-
-## Seed con IGDB (20 juegos)
-- Ejecuta `npm run seed:igdb` para reemplazar los juegos por 20 de IGDB.
+## Scripts
+- npm start: levanta backend y frontend estatico
+- npm run seed: inicializa/siembra base local
+- npm run seed:igdb: reemplaza catalogo con 20 juegos de IGDB
 
 ## Credenciales demo
 - Admin: admin@demo.com
 - Password: admin123
 
-## Roles
-- Usuario: navegar, buscar y simular compras.
-- Encargado: puede gestionar productos.
-- Administrador: gestiona productos y usuarios.
+## Funcionalidades
+- Catalogo, detalle, carrito y checkout simulado
+- Auth de registro/login
+- Roles: user, manager, admin
+- Panel admin para productos y usuarios
+- Favoritos por usuario
+- Historial de compras
+- Filtros y paginacion
+- Integracion con IGDB
+- IA Lab con inferencia de Hugging Face (facebook/bart-large-mnli)
 
-## Funcionalidades nuevas
-- Favoritos por usuario.
-- Historial de compras simuladas.
-- Filtros por genero, plataforma y precio.
-- Paginacion del catalogo.
+## Evidencias academicas
+- Documentacion de prompts: docs/prompts-ia.md
+- Reflexion y aprendizaje: docs/reflexion-academica.md
+- Guia de despliegue cloud: docs/despliegue-nube.md
 
-## Notas
-- El panel usa un header simple `x-role` desde el frontend.
-- Las imagenes usan placeholders y se pueden reemplazar.
-- El checkout es solo visual, no hay pagos reales.
-- Si necesitas reiniciar datos, borra `data/store.db` y vuelve a iniciar el servidor.
-- Si agregaste productos sin precio, borra `data/store.db` para limpiar registros invalidos.
+## Requisito de contenido IA
+La vista IA Lab integra una imagen IA y un bloque de video para reemplazo por video IA final.
+
+## Base de datos local
+- Archivo SQLite: data/store.db
+- Si necesitas reset: elimina data/store.db y reinicia npm start
 
 ## Historico de cambios
-- Ver `CHANGELOG.md`
+- Ver CHANGELOG.md

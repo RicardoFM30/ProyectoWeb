@@ -1,0 +1,29 @@
+<svg width="1280" height="800" viewBox="0 0 1280 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1280" y2="800" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#081629"/>
+      <stop offset="1" stop-color="#18284A"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="800" fill="url(#bg)"/>
+
+  <text x="98" y="168" fill="#BDE6FF" font-size="62" font-family="Arial" font-weight="700">Pulse Strike Arena Pass</text>
+  <text x="98" y="214" fill="#8EB9D7" font-size="29" font-family="Arial">Skins legendarias + bonus XP + pase premium</text>
+
+  <rect x="98" y="264" width="760" height="438" rx="24" fill="#102138" stroke="#4FC7FF" stroke-opacity="0.3"/>
+  <rect x="142" y="314" width="220" height="168" rx="14" fill="#1A3557"/>
+  <rect x="388" y="314" width="220" height="168" rx="14" fill="#1A3557"/>
+  <rect x="634" y="314" width="180" height="168" rx="14" fill="#1A3557"/>
+
+  <rect x="142" y="510" width="672" height="150" rx="14" fill="#162B47"/>
+  <text x="172" y="568" fill="#94D8FF" font-size="34" font-family="Arial">Incluye 3 apariencias exclusivas y arma epica</text>
+  <text x="172" y="616" fill="#6BB8E8" font-size="28" font-family="Arial">Valido durante toda la temporada competitiva</text>
+
+  <rect x="900" y="266" width="292" height="436" rx="24" fill="#102138" stroke="#4FC7FF" stroke-opacity="0.3"/>
+  <text x="954" y="392" fill="#6CF8C8" font-size="78" font-family="Arial" font-weight="700">$14.99</text>
+  <rect x="950" y="478" width="194" height="70" rx="35" fill="#6CF8C8"/>
+  <text x="1002" y="522" fill="#143125" font-size="34" font-family="Arial" font-weight="700">OBTENER</text>
+
+  <circle cx="1130" cy="190" r="56" fill="#FF4BD8"/>
+  <text x="1086" y="205" fill="#25072F" font-size="34" font-family="Arial" font-weight="700">BUNDLE</text>
+</svg>

@@ -1,4 +1,5 @@
 const crypto = require("crypto");
+const cors = require("cors");
 const express = require("express");
 const fetch = require("node-fetch");
 const path = require("path");
@@ -8,8 +9,11 @@ require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const IS_FIREBASE_FUNCTION = Boolean(process.env.K_SERVICE || process.env.FUNCTION_TARGET);
+const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || "";
 const IGDB_CLIENT_ID = process.env.IGDB_CLIENT_ID;
 const IGDB_CLIENT_SECRET = process.env.IGDB_CLIENT_SECRET;
+const HF_API_TOKEN = process.env.HF_API_TOKEN;
 let igdbToken = null;
 let igdbTokenExpiry = 0;
 
@@ -17,6 +21,20 @@ initDb();
 seedDb();
 
 app.use(express.json());
+const allowedOrigins = FRONTEND_ORIGIN
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error("Origin no permitido"));
+    }
+  })
+);
 app.use(express.static(path.join(__dirname, "..", "public")));
 
 function hashPassword(password) {
@@ -51,6 +69,85 @@ async function getIgdbToken() {
   igdbToken = data.access_token;
   igdbTokenExpiry = Date.now() + data.expires_in * 1000 - 60 * 1000;
   return igdbToken;
+}
+
+async function runHfClassification(text, labels) {
+  if (!HF_API_TOKEN) {
+    return { error: "HF_API_TOKEN no configurado" };
+  }
+
+  const response = await fetch(
+    "https://router.huggingface.co/hf-inference/models/facebook/bart-large-mnli",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${HF_API_TOKEN}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        inputs: text,
+        parameters: {
+          candidate_labels: labels,
+          multi_label: true
+        }
+      }),
+      signal: AbortSignal.timeout(45000)
+    }
+  );
+
+  if (!response.ok) {
+    let detail = "";
+    try {
+      const errBody = await response.json();
+      if (errBody.error) {
+        detail = errBody.error;
+      } else if (errBody.estimated_time) {
+        detail = `Modelo cargando, espera ${Math.ceil(errBody.estimated_time)}s y reintenta`;
+      }
+    } catch (_) {}
+    return { error: `HF ${response.status}: ${detail || response.statusText}` };
+  }
+
+  const payload = await response.json();
+  if (payload && payload.estimated_time) {
+    return { error: `Modelo cargando, espera ${Math.ceil(payload.estimated_time)}s y reintenta` };
+  }
+
+  let result = [];
+
+  if (payload && Array.isArray(payload.labels) && Array.isArray(payload.scores)) {
+    result = payload.labels.map((label, index) => ({
+      label,
+      score: Number((payload.scores[index] || 0).toFixed(4))
+    }));
+  } else if (Array.isArray(payload) && payload.length) {
+    const first = payload[0];
+    if (first && typeof first === "object" && "label" in first && "score" in first) {
+      result = payload.map((item) => ({
+        label: item.label,
+        score: Number((item.score || 0).toFixed(4))
+      }));
+    } else if (Array.isArray(first) && first.length) {
+      const nestedFirst = first[0];
+      if (nestedFirst && typeof nestedFirst === "object" && "label" in nestedFirst && "score" in nestedFirst) {
+        result = first.map((item) => ({
+          label: item.label,
+          score: Number((item.score || 0).toFixed(4))
+        }));
+      }
+    }
+  }
+
+  if (!result.length) {
+    const shape = Array.isArray(payload)
+      ? `array(${payload.length})`
+      : payload && typeof payload === "object"
+      ? Object.keys(payload).join(",") || "object"
+      : typeof payload;
+    return { error: `Respuesta invalida de Hugging Face (${shape})` };
+  }
+
+  return { result };
 }
 
 function sanitizeQuery(value) {
@@ -470,10 +567,42 @@ app.post("/api/orders", requireUser, (req, res) => {
   });
 });
 
+app.post("/api/ai/classify", async (req, res) => {
+  const text = typeof req.body.text === "string" ? req.body.text.trim() : "";
+  const labels = Array.isArray(req.body.labels)
+    ? req.body.labels.filter((label) => typeof label === "string" && label.trim())
+    : [];
+
+  if (!text) {
+    return res.status(400).json({ message: "El texto es obligatorio" });
+  }
+
+  const safeLabels = labels.length
+    ? labels.map((label) => label.trim()).slice(0, 8)
+    : ["accion", "rpg", "aventura", "estrategia", "terror", "casual"];
+
+  try {
+    const hf = await runHfClassification(text, safeLabels);
+    if (hf.error) {
+      return res.status(500).json({ message: hf.error });
+    }
+    return res.json({ labels: hf.result });
+  } catch (error) {
+    if (error && (error.name === "TimeoutError" || error.name === "AbortError")) {
+      return res.status(504).json({ message: "El modelo tarda en responder, reintenta en unos segundos" });
+    }
+    return res.status(500).json({ message: "Error en inferencia de IA" });
+  }
+});
+
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "..", "public", "index.html"));
 });
 
-app.listen(PORT, () => {
-  console.log(`Servidor activo en http://localhost:${PORT}`);
-});
+if (!IS_FIREBASE_FUNCTION) {
+  app.listen(PORT, () => {
+    console.log(`Servidor activo en http://localhost:${PORT}`);
+  });
+}
+
+module.exports = { app };
