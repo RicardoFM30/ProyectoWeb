@@ -16,14 +16,14 @@ Se ha trabajado de forma iterativa. Primero se construyo una base funcional mini
 
 ## 2.2 Arquitectura elegida
 
-La arquitectura final es una arquitectura monolitica ligera para entorno local:
+La arquitectura final es una arquitectura monolitica ligera para entorno local y despliegue serverless:
 
 - Frontend estatico servido desde el mismo servidor.
 - Backend REST con Express.
-- Base de datos SQLite almacenada en archivo local.
+- Base de datos SQLite almacenada en archivo local (o en /tmp cuando corre en Vercel).
 - Integraciones externas puntuales con IGDB y Hugging Face.
 
-Esta decision reduce la complejidad operativa, evita dependencias de servicios de despliegue y facilita la demostracion academica del flujo completo de la aplicacion.
+Esta decision reduce la complejidad operativa, evita dependencias de servicios de despliegue y facilita la demostracion academica del flujo completo de la aplicacion. Para la entrega final se habilito un despliegue en Vercel manteniendo la misma estructura monolitica.
 
 ## 2.3 Frontend
 
@@ -62,6 +62,8 @@ Las responsabilidades del backend son:
 ## 2.5 Base de datos
 
 La persistencia se ha resuelto con SQLite, utilizando un archivo local en data/store.db. Esta decision encaja con el caracter academico del proyecto porque permite disponer de una base de datos real sin necesidad de instalar ni administrar un servidor externo.
+
+En el despliegue en Vercel, el archivo de SQLite se crea en /tmp para cumplir las restricciones de escritura del entorno serverless. Esto implica que los datos no son persistentes entre despliegues o reinicios.
 
 La inicializacion y el seeding se realizan desde server/db.js. En ese archivo se crean las tablas necesarias y se insertan datos iniciales cuando hace falta.
 
@@ -127,6 +129,17 @@ El proyecto se ha ido validando de forma incremental mediante pruebas manuales e
 - Que las APIs externas fallaran de forma controlada cuando faltaban credenciales o habia errores de red.
 
 Tambien se introdujo un catalogo de respaldo local para evitar que la aplicacion quedara inutilizable si fallaba el backend o la carga remota del catalogo.
+
+## 2.10 Despliegue en Vercel
+
+Para el despliegue final se utilizo Vercel en modo serverless. Se configuro un entrypoint unico mediante vercel.json, apuntando a server/index.js, y se definieron las variables de entorno necesarias en la plataforma.
+
+Puntos clave del despliegue:
+
+- Framework Preset: Other.
+- Build Command y Output Directory vacios.
+- Variables de entorno: IGDB_CLIENT_ID, IGDB_CLIENT_SECRET, HF_API_TOKEN.
+- Persistencia limitada por el uso de SQLite en /tmp.
 
 ## 3. Funcionalidades implementadas
 

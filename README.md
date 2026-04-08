@@ -2,7 +2,7 @@
 
 Proyecto academico fullstack con frontend React (sin build) y backend Express + SQLite.
 
-Estado actual: ejecucion local unicamente (sin despliegue cloud activo).
+Estado actual: despliegue en Vercel (serverless) y ejecucion local.
 
 ## Requisitos
 - Node.js 18+
@@ -24,6 +24,18 @@ HF_API_TOKEN es obligatorio para usar la inferencia del IA Lab.
    - npm start
 3. Abrir en navegador:
    - http://localhost:3000
+
+## Despliegue (Vercel)
+1. Subir el repo con vercel.json en la raiz.
+2. En Vercel: Import Project -> Framework Preset: Other.
+3. Build Command y Output Directory: vacios.
+4. Variables de entorno en Vercel:
+   - IGDB_CLIENT_ID
+   - IGDB_CLIENT_SECRET
+   - HF_API_TOKEN
+5. Deploy.
+
+Enlace de la pñagina(https://proyecto-web-wheat.vercel.app/)
 
 ## Scripts
 - npm start: levanta backend y frontend estatico
