@@ -582,8 +582,14 @@ app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "..", "public", "index.html"));
 });
 
-app.listen(PORT, () => {
-  console.log(`Servidor activo en http://localhost:${PORT}`);
-});
+const isServerless = Boolean(
+  process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME
+);
 
-module.exports = { app };
+if (!isServerless) {
+  app.listen(PORT, () => {
+    console.log(`Servidor activo en http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;
