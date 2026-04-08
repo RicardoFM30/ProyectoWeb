@@ -52,10 +52,6 @@ HF_API_TOKEN es obligatorio para usar la inferencia del IA Lab.
 - Incluye lo agregado y luego retirado (intentos cloud y rollback a local)
 - Incluye bitacora paso a paso de la sesion de trabajo (2026-04-07 a 2026-04-08)
 
-## Evidencias academicas
-- Documentacion de prompts: docs/prompts-ia.md
-- Reflexion y aprendizaje: docs/reflexion-academica.md
-
 ## Requisito de contenido IA
 La vista IA Lab integra una imagen IA y un bloque de video para reemplazo por video IA final.
 
