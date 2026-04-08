@@ -6,7 +6,12 @@ const sqlite3 = require("sqlite3").verbose();
 
 require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
 
-const dataDir = path.join(__dirname, "..", "data");
+const isServerless = Boolean(
+  process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME
+);
+const dataDir = isServerless
+  ? path.join("/tmp", "data")
+  : path.join(__dirname, "..", "data");
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
