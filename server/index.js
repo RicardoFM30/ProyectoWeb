@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const express = require("express");
 const fetch = require("node-fetch");
+const AbortController = global.AbortController || require("abort-controller");
 const path = require("path");
 const { db, initDb, seedDb } = require("./db");
 
@@ -18,6 +19,13 @@ initDb();
 seedDb();
 
 app.use(express.json());
+app.use((req, res, next) => {
+  res.setHeader(
+    "Content-Security-Policy",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com; object-src 'none'; base-uri 'self'"
+  );
+  next();
+});
 app.use(express.static(path.join(__dirname, "..", "public")));
 
 function hashPassword(password) {
@@ -59,6 +67,9 @@ async function runHfClassification(text, labels) {
     return { error: "HF_API_TOKEN no configurado" };
   }
 
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 45000);
+
   const response = await fetch(
     "https://router.huggingface.co/hf-inference/models/facebook/bart-large-mnli",
     {
@@ -74,9 +85,11 @@ async function runHfClassification(text, labels) {
           multi_label: true
         }
       }),
-      signal: AbortSignal.timeout(45000)
+      signal: controller.signal
     }
   );
+
+  clearTimeout(timeoutId);
 
   if (!response.ok) {
     let detail = "";
@@ -571,6 +584,7 @@ app.post("/api/ai/classify", async (req, res) => {
     }
     return res.json({ labels: hf.result });
   } catch (error) {
+    console.error("HF classify error:", error && error.message ? error.message : error);
     if (error && (error.name === "TimeoutError" || error.name === "AbortError")) {
       return res.status(504).json({ message: "El modelo tarda en responder, reintenta en unos segundos" });
     }
